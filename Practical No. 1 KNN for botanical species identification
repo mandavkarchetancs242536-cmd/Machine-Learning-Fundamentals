@@ -1,0 +1,52 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+
+df = pd.read_csv("iris.csv")
+X = df.drop("species", axis=1).values
+y = df["species"].values
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=10)
+
+accuracies = []
+
+for k in [3, 5, 7]:
+    model = KNeighborsClassifier(n_neighbors=k, metric="euclidean")
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    accuracies.append(accuracy * 100)
+    print("\nK =", k, "\nAccuracy:", accuracy * 100, "%")
+
+plt.bar([3, 5, 7], accuracies)
+plt.xlabel("K Values")
+plt.ylabel("Accuracy (%)")
+plt.title("KNN Accuracy Comparison")
+plt.xticks([3, 5, 7])
+plt.grid(axis="y")
+plt.show()
+
+print("\nMANUAL DISTANCE CALCULATION")
+
+for i in range(5):
+    distances = []
+    for j in range(len(X_train)):
+        d = np.sqrt(np.sum((X_test[i] - X_train[j]) ** 2))
+        distances.append((d, y_train[j]))
+
+    distances.sort(key=lambda x: x[0])
+    print("\nTest Sample", i + 1)
+    print("Actual Species:", y_test[i])
+
+    for k in [3, 5, 7]:
+        labels = [x[1] for x in distances[:k]]
+        prediction = max(set(labels), key=labels.count)
+        print("K =", k, "Predicted:", prediction)
+
+    print("First 5 Training Distances:")
+    for d, label in distances[:5]:
+        print("Distance:", round(d, 3), "Species:", label)
