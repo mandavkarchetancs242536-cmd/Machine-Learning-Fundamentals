@@ -1,0 +1,50 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+
+
+df = pd.read_csv("breast-cancer.csv")
+
+X = df.drop(["id", "diagnosis"], axis=1).values
+y = LabelEncoder().fit_transform(df["diagnosis"])
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=10, stratify=y)
+
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+
+metrics = ["euclidean", "manhattan", "minkowski"]
+accuracies = []
+
+for metric in metrics:
+    model = KNeighborsClassifier(n_neighbors=5, metric=metric)
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+
+    accuracy = accuracy_score(y_test, y_pred)
+    accuracies.append(accuracy * 100)
+
+    print("\nMetric:", metric)
+    print("Accuracy:", accuracy * 100, "%")
+
+
+cm = confusion_matrix(y_test, y_pred, labels=[0, 1])
+
+sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
+            xticklabels=["Benign", "Malignant"],
+            yticklabels=["Benign", "Malignant"])
+
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Breast Cancer Confusion Matrix")
+plt.show()
+
